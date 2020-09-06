@@ -1,30 +1,13 @@
 import styled from "styled-components";
 
-export const Sprite1 = styled.div`
-	width:123px;
-	height:100px;
-	position:absolute;
-	top:100px;
-	right:50px;
-	z-index:3;
-`;
 
-export const Sprite2 = styled.div`
-	width:90px;
-	height:73px;
+export const Sprite = styled.div`
+	width:${(props) => props.styles.width};
+	height:${(props) => props.styles.height};
 	position:absolute;
-	top:70px;
-	right:200px;
-	z-index:2;
-`;
-
-export const Sprite3 = styled.div`
-	width:50px;
-	height:41px;
-	position:absolute;
-	top:50px;
-	right:50px;
-	z-index:1;
+	top:${(props) => props.styles.top};
+	right:${(props) => props.styles.right};
+	z-index:${(props) => props.styles.zindex};
 `;
 
 export const WaspAnimationFrame = styled.div`
