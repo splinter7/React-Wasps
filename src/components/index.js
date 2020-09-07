@@ -27,10 +27,10 @@ class Wasps extends React.Component {
       );
     });
 
-    waspObj.forEach((wasp) => {
+    waspObj.forEach((wasp, index) => {
       wasp.flap();
       wasp.setTop();
-      wasp.flyDown();
+      index !== 1 ? wasp.flyDown() : wasp.flyUp();
     });
   };
 
