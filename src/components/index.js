@@ -7,70 +7,69 @@ import WaspAnimation from "./animation";
 import { wasps } from "./wasps";
 
 class Wasps extends React.Component {
-    constructor(){
-        super();
+  constructor() {
+    super();
 
-        this.state = {
-            wasps: wasps
-        }
-    }
+    this.state = {
+      wasps: wasps,
+      spriteImgs: [waspbg1, waspbg2, waspbg3],
+    };
+  }
 
-    componentDidMount = () => {
-        let { wasps } = this.state;
+  componentDidMount = () => {
+    const { wasps } = this.state;
+    let waspObj = wasps.map((wasp) => {
+      return new WaspAnimation(
+        wasp.target,
+        wasp.name,
+        wasp.boundary,
+        this.changeWaspWingPosition
+      );
+    });
 
-        let waspObj = wasps.map((wasp) => {
-            return new WaspAnimation(wasp.target, wasp.name, wasp.boundary, this.changeWaspWingPosition)
-        });
+    waspObj.forEach((wasp) => {
+      wasp.flap();
+      wasp.setTop();
+      wasp.flyDown();
+    });
+  };
 
-        waspObj.forEach((wasp) => {
-            wasp.flap();
-            wasp.setTop();
-            wasp.flyDown();
-        });
-    }
+  changeWaspWingPosition = (value, object) => {
+    const { wasps } = this.state;
+    let update = wasps.map((wasp) => {
+      if (wasp.name === object) {
+        wasp.position = `0 ${value}px`;
+      }
+      return wasp;
+    });
+    this.setState({ wasps: update });
+  };
 
-    changeWaspWingPosition = (value, object) => {
-        const { wasps } = this.state;
-        let update = wasps.map((wasp) => {
-            if(wasp.name === object){
-                wasp.position = `0 ${value}px`;
-            }
-            return wasp;
-        });
-        this.setState({wasps: update});
-    }
+  renderWasp = (index, wasp) => {
+    const { spriteImgs } = this.state;
+    return (
+      <Sprite styles={wasp.styles} key={index} id={wasp.target}>
+        <WaspAnimationFrame
+          background={spriteImgs[index]}
+          id={wasp.name}
+          position={wasp.position}
+          width={wasp.styles.width}
+          height={wasp.styles.height}
+        />
+      </Sprite>
+    );
+  };
 
-    renderWasp = (index, wasp, img) => (
-        <Sprite styles={wasp.styles} key={index} id={wasp.target}>
-            <WaspAnimationFrame
-                background={img}
-                id={wasp.name}
-                position={wasp.position}
-                width={wasp.styles.width}
-                height={wasp.styles.height}
-            />
-        </Sprite>
-    )
-
-    render = () => {
-        const {
-            wasps
-        } = this.state
-        return (
-            <div>
-                {wasps.map((wasp, index) => {
-                    switch(index){
-                        case 0:
-                            return this.renderWasp(index, wasp, waspbg1);
-                        case 1:
-                            return this.renderWasp(index, wasp, waspbg2);
-                        case 2:
-                            return this.renderWasp(index, wasp, waspbg3);
-                    }
-                })}
-            </div>
-        );
-    }
+  render = () => {
+    const { wasps } = this.state;
+    return (
+      <div>
+        {wasps.map((wasp, index) => {
+          return this.renderWasp(index, wasp);
+        })}
+      </div>
+    );
+  };
 }
 
 export default Wasps;

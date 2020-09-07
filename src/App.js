@@ -1,10 +1,8 @@
-import React from 'react';
-import Wasps from './components'
+import React from "react";
+import Wasps from "./components";
 
 function App() {
-  return (
-    <Wasps />
-  );
+  return <Wasps />;
 }
 
 export default App;
