@@ -16,22 +16,30 @@ class Wasps extends React.Component {
     };
   }
 
+  waspAnimationsRef = [];
+
   componentDidMount = () => {
     const { wasps } = this.state;
-    let waspObj = wasps.map((wasp) => {
+    const waspObj = wasps.map((wasp) => {
       return new WaspAnimation(
         wasp.target,
         wasp.name,
         wasp.boundary,
-        this.changeWaspWingPosition
+        this.changeWaspWingPosition,
       );
     });
+    this.waspAnimationsRef = waspObj;
 
     waspObj.forEach((wasp, index) => {
       wasp.flap();
       wasp.setTop();
       index !== 1 ? wasp.flyDown() : wasp.flyUp();
     });
+  };
+
+  componentWillUnmount = () => {
+    this.waspAnimationsRef.forEach((wasp) => wasp.stop());
+    this.waspAnimationsRef = [];
   };
 
   changeWaspWingPosition = (value, object) => {

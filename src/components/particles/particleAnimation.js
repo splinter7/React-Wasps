@@ -39,6 +39,7 @@ function createParticle(width, height, options) {
 
 export function createParticleAnimation(canvas, userOptions = {}) {
   const options = { ...DEFAULT_OPTIONS, ...userOptions };
+  const ctx = canvas.getContext("2d");
   let width = canvas.width;
   let height = canvas.height;
   let particles = [];
@@ -128,9 +129,7 @@ export function createParticleAnimation(canvas, userOptions = {}) {
   }
 
   function draw() {
-    const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const glowBlur = options.glowBlur ?? 10;
     ctx.clearRect(0, 0, width, height);
 

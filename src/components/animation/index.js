@@ -62,7 +62,15 @@ class WaspAnimation {
   };
 
   setTop = () => {
-    this.wasp.style.top = this.wasp.top;
+    this.wasp.style.top = `${this.top}px`;
+  };
+
+  stop = () => {
+    if (this.flapInterval) {
+      clearInterval(this.flapInterval);
+      this.flapInterval = 0;
+    }
+    gsap.killTweensOf(`#${this.parent}`);
   };
 }
 

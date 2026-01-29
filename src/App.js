@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Wasps from "./components";
 import ParticleField from "./components/particles/ParticleField";
+import AudioPlayer from "./components/audio/AudioPlayer";
 import backgroundImage from "./components/images/backgrounds/cyberpunk_forest_cityscape.jpg";
 
 const FPS_UPDATE_INTERVAL_MS = 500;
@@ -90,29 +91,44 @@ function App() {
           bottom: 8,
           left: 8,
           zIndex: 3,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "6px 10px",
+          background: "rgba(0, 0, 0, 0.35)",
+          borderRadius: 6,
+          border: "1px solid rgba(255, 255, 255, 0.08)",
           fontFamily: "monospace",
-          fontSize: 12,
-          color: "rgba(180, 180, 180, 0.95)",
-          textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+          fontSize: 10,
+          color: "rgba(255, 255, 255, 0.88)",
+          letterSpacing: "0.02em",
           pointerEvents: "none",
         }}
-        aria-hidden="true"
       >
-        FPS: <span style={{ color: "rgba(255, 255, 255, 0.9)" }}>{fps}</span>
-        {" · "}
-        Viewport:{" "}
-        <span style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+        <div style={{ pointerEvents: "auto" }}>
+          <AudioPlayer embedded />
+        </div>
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "rgba(255, 255, 255, 0.2)",
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ pointerEvents: "none" }}>
+          FPS <span style={{ color: "rgba(255, 255, 255, 0.95)" }}>{fps}</span>
+          {" · "}
           {viewport.width}×{viewport.height}
+          {memoryMb != null && (
+            <>
+              {" · "}
+              <span style={{ color: "rgba(255, 255, 255, 0.95)" }}>
+                {memoryMb} MB
+              </span>
+            </>
+          )}
         </span>
-        {memoryMb != null && (
-          <>
-            {" · "}
-            Memory:{" "}
-            <span style={{ color: "rgba(255, 255, 255, 0.9)" }}>
-              {memoryMb} MB
-            </span>
-          </>
-        )}
       </div>
     </>
   );
