@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import sampleMp3 from "../../audio/sample.mp3";
+import thunderMp3 from "../../audio/thunder.mp3";
+import {
+  setupThunderAnalyser,
+  startThunderFlickerLoop,
+  dispatchThunderFlicker,
+} from "./thunderFlicker";
 
 const BAR_COUNT = 21;
 const BAR_GAP = 2;
@@ -59,6 +65,9 @@ function AudioPlayer({ embedded = false }) {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const audioRef = useRef(null);
+  const thunderAudioRef = useRef(null);
+  const thunderAnalyserRef = useRef(null);
+  const thunderDataArrayRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const dataArrayRef = useRef(null);
@@ -84,10 +93,20 @@ function AudioPlayer({ embedded = false }) {
     analyserRef.current = analyser;
     dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
 
+    const thunder = thunderAudioRef.current;
+    if (thunder && !thunderAnalyserRef.current) {
+      const setup = setupThunderAnalyser(ctx, thunder);
+      if (setup) {
+        thunderAnalyserRef.current = setup.analyser;
+        thunderDataArrayRef.current = setup.dataArray;
+      }
+    }
+
     (async () => {
       try {
         if (ctx.state === "suspended") await ctx.resume();
         await audio.play();
+        thunderAudioRef.current?.play().catch(() => {});
         setIsPlaying(true);
       } catch (_) {
         // Autoplay blocked (e.g. browser policy); user can click play
@@ -116,6 +135,33 @@ function AudioPlayer({ embedded = false }) {
       audio.removeEventListener("durationchange", onDurationChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const ctx = audioContextRef.current;
+    const thunder = thunderAudioRef.current;
+    if (!ctx || !thunder) return;
+
+    if (!thunderAnalyserRef.current) {
+      const setup = setupThunderAnalyser(ctx, thunder);
+      if (setup) {
+        thunderAnalyserRef.current = setup.analyser;
+        thunderDataArrayRef.current = setup.dataArray;
+      }
+    }
+
+    if (!thunderAnalyserRef.current || !thunderDataArrayRef.current) return;
+
+    const stop = startThunderFlickerLoop(
+      {
+        analyser: thunderAnalyserRef.current,
+        dataArray: thunderDataArrayRef.current,
+      },
+      dispatchThunderFlicker,
+    );
+    return stop;
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!isPlaying || !analyserRef.current || !dataArrayRef.current) return;
@@ -200,15 +246,29 @@ function AudioPlayer({ embedded = false }) {
 
   const toggle = async () => {
     const audio = audioRef.current;
+    const thunder = thunderAudioRef.current;
     if (!audio) return;
     if (isPlaying) {
       audio.pause();
+      if (thunder) {
+        thunder.pause();
+        thunder.currentTime = 0;
+      }
+      dispatchThunderFlicker(0);
       resetVisualizer();
       setIsPlaying(false);
     } else {
       const ctx = audioContextRef.current;
       if (ctx?.state === "suspended") await ctx.resume();
+      if (thunder && !thunderAnalyserRef.current) {
+        const setup = setupThunderAnalyser(ctx, thunder);
+        if (setup) {
+          thunderAnalyserRef.current = setup.analyser;
+          thunderDataArrayRef.current = setup.dataArray;
+        }
+      }
       audio.play().catch(() => {});
+      thunder?.play().catch(() => {});
       setIsPlaying(true);
     }
   };
@@ -233,6 +293,7 @@ function AudioPlayer({ embedded = false }) {
   const inner = (
     <>
       <audio ref={audioRef} src={sampleMp3} loop />
+      <audio ref={thunderAudioRef} src={thunderMp3} loop />
       <button
         type="button"
         onClick={toggle}

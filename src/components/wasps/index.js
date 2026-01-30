@@ -10,6 +10,7 @@ export const wasps = [
       top: "100px",
       right: "50px",
       zindex: 3,
+      opacity: 0.5,
     },
   },
   {
@@ -23,6 +24,7 @@ export const wasps = [
       top: "70px",
       right: "200px",
       zindex: 2,
+      opacity: 0.5,
     },
   },
   {
@@ -36,6 +38,7 @@ export const wasps = [
       top: "50px",
       right: "50px",
       zindex: 1,
+      opacity: 0.5,
     },
   },
 ];

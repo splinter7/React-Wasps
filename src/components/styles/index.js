@@ -7,6 +7,7 @@ export const Sprite = styled.div`
   top: ${(props) => props.styles.top};
   right: ${(props) => props.styles.right};
   z-index: ${(props) => props.styles.zindex};
+  opacity: ${(props) => props.styles.opacity};
 `;
 
 export const WaspAnimationFrame = styled.div`
