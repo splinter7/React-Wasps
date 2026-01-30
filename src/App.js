@@ -4,12 +4,20 @@ import ParticleField from "./components/particles/ParticleField";
 import AudioPlayer from "./components/audio/AudioPlayer";
 import { THUNDER_FLICKER_EVENT } from "./components/audio/thunderFlicker";
 import backgroundImage from "./components/images/backgrounds/cyberpunk_forest_cityscape.jpg";
+import {
+  BackgroundLayer,
+  FlickerOverlay,
+  ContentWrapper,
+  StatsBar,
+  AudioWrapper,
+  StatsDivider,
+  StatsText,
+  StatsValue,
+} from "./App.style";
 
 const FPS_UPDATE_INTERVAL_MS = 500;
 const MEMORY_UPDATE_INTERVAL_MS = 500;
 const FLICKER_DECAY = 0.88;
-const FLICKER_MAX_OPACITY = 0.5;
-const FLICKER_BRIGHTNESS_MAX = 0.6;
 
 const hasMemoryAPI = () =>
   typeof performance !== "undefined" && performance.memory;
@@ -23,7 +31,7 @@ function App() {
   const [viewport, setViewport] = useState(() =>
     typeof window !== "undefined"
       ? { width: window.innerWidth, height: window.innerHeight }
-      : { width: 0, height: 0 },
+      : { width: 0, height: 0 }
   );
   const [memoryMb, setMemoryMb] = useState(null);
   const [flickerIntensity, setFlickerIntensity] = useState(0);
@@ -75,7 +83,7 @@ function App() {
       }
       flickerDisplayRef.current = Math.max(
         flickerDisplayRef.current,
-        Math.min(1, raw),
+        Math.min(1, raw)
       );
     };
     window.addEventListener(THUNDER_FLICKER_EVENT, onThunderFlicker);
@@ -108,90 +116,32 @@ function App() {
 
   return (
     <>
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          zIndex: 0,
-          filter: `brightness(${1 + flickerIntensity * FLICKER_BRIGHTNESS_MAX})`,
-          transition: "filter 0.06s ease-out",
-        }}
+      <BackgroundLayer
+        $backgroundImage={backgroundImage}
+        $flickerIntensity={flickerIntensity}
       />
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.52)",
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-        aria-hidden="true"
-      />
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(255, 255, 255, 1)",
-          opacity: flickerIntensity * FLICKER_MAX_OPACITY,
-          pointerEvents: "none",
-          zIndex: 1.5,
-          transition: "opacity 0.04s ease-out",
-        }}
-        aria-hidden="true"
-      />
+      <FlickerOverlay $flickerIntensity={flickerIntensity} aria-hidden="true" />
       <ParticleField />
-      <div style={{ position: "relative", zIndex: 2 }}>
+      <ContentWrapper>
         <Wasps />
-      </div>
-      <div
-        style={{
-          position: "fixed",
-          bottom: 8,
-          left: 8,
-          zIndex: 3,
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "6px 10px",
-          background: "rgba(0, 0, 0, 0.35)",
-          borderRadius: 6,
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          fontFamily: "monospace",
-          fontSize: 10,
-          color: "rgba(255, 255, 255, 0.88)",
-          letterSpacing: "0.02em",
-          pointerEvents: "none",
-        }}
-      >
-        <div style={{ pointerEvents: "auto" }}>
+      </ContentWrapper>
+      <StatsBar>
+        <AudioWrapper>
           <AudioPlayer embedded />
-        </div>
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "rgba(255, 255, 255, 0.2)",
-            flexShrink: 0,
-          }}
-        />
-        <span style={{ pointerEvents: "none" }}>
-          FPS <span style={{ color: "rgba(255, 255, 255, 0.95)" }}>{fps}</span>
+        </AudioWrapper>
+        <StatsDivider />
+        <StatsText>
+          FPS <StatsValue>{fps}</StatsValue>
           {" · "}
           {viewport.width}×{viewport.height}
           {memoryMb != null && (
             <>
               {" · "}
-              <span style={{ color: "rgba(255, 255, 255, 0.95)" }}>
-                {memoryMb} MB
-              </span>
+              <StatsValue>{memoryMb} MB</StatsValue>
             </>
           )}
-        </span>
-      </div>
+        </StatsText>
+      </StatsBar>
     </>
   );
 }

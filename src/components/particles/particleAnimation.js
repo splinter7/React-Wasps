@@ -66,65 +66,76 @@ export function createParticleAnimation(canvas, userOptions = {}) {
     initParticles();
   }
 
+  function applyRepulsion(p, ox, oy, radius, strength) {
+    const dx = p.x - ox, dy = p.y - oy;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+    if (dist >= radius) return;
+    const factor = (1 - dist / radius) * strength;
+    p.vx += (dx / dist) * factor;
+    p.vy += (dy / dist) * factor;
+  }
+
+  function wrap(p) {
+    if (p.x < -p.size) p.x = width + p.size;
+    if (p.x > width + p.size) p.x = -p.size;
+    if (p.y < -p.size) p.y = height + p.size;
+    if (p.y > height + p.size) p.y = -p.size;
+  }
+
   function update() {
-    const radius = options.repulsionRadius ?? 120;
-    const strength = options.repulsionStrength ?? 2;
-    const maxFlee = options.maxSpeedFlee ?? 1.8;
-    const baseMaxSpeed = Math.abs(options.maxSpeed);
-    const slowdownRate = options.slowdownRate ?? 0.04;
-    const particleRadius = options.particleRepulsionRadius ?? 28;
-    const particleStrength = options.particleRepulsionStrength ?? 0.6;
+    const {
+      repulsionRadius: radius = 120,
+      repulsionStrength: strength = 2,
+      maxSpeedFlee: maxFlee = 1.8,
+      slowdownRate = 0.04,
+      particleRepulsionRadius: particleRadius = 28,
+      particleRepulsionStrength: particleStrength = 0.6,
+    } = options;
+    const baseMaxSpeed = Math.abs(options.maxSpeed ?? 0.5);
+
+    const cellSize = Math.max(1, particleRadius);
+    const key = (cx, cy) => `${cx},${cy}`;
+    const grid = new Map();
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const k = key(Math.floor(p.x / cellSize), Math.floor(p.y / cellSize));
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(i);
+    }
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      for (let j = 0; j < particles.length; j++) {
-        if (i === j) continue;
-        const other = particles[j];
-        const dx = p.x - other.x;
-        const dy = p.y - other.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-        if (dist < particleRadius) {
-          const factor = (1 - dist / particleRadius) * particleStrength;
-          const ux = dx / dist;
-          const uy = dy / dist;
-          p.vx += ux * factor;
-          p.vy += uy * factor;
+      const cx = Math.floor(p.x / cellSize), cy = Math.floor(p.y / cellSize);
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const cell = grid.get(key(cx + dx, cy + dy));
+          if (!cell) continue;
+          for (let k = 0; k < cell.length; k++) {
+            const j = cell[k];
+            if (i === j) continue;
+            applyRepulsion(p, particles[j].x, particles[j].y, particleRadius, particleStrength);
+          }
         }
       }
       let inRepulsionZone = false;
       if (mouse.x != null && mouse.y != null) {
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
+        const dx = p.x - mouse.x, dy = p.y - mouse.y;
         const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-        if (dist < radius) {
-          inRepulsionZone = true;
-          const factor = (1 - dist / radius) * strength;
-          const ux = dx / dist;
-          const uy = dy / dist;
-          p.vx += ux * factor;
-          p.vy += uy * factor;
-        }
+        inRepulsionZone = dist < radius;
+        applyRepulsion(p, mouse.x, mouse.y, radius, strength);
       }
       let speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       if (inRepulsionZone && speed > maxFlee) {
         p.vx = (p.vx / speed) * maxFlee;
         p.vy = (p.vy / speed) * maxFlee;
-        speed = maxFlee;
       } else if (!inRepulsionZone && speed > baseMaxSpeed) {
-        const targetSpeed = baseMaxSpeed;
-        const newSpeed = speed + (targetSpeed - speed) * slowdownRate;
-        const scale = newSpeed / speed;
-        p.vx *= scale;
-        p.vy *= scale;
-        speed = newSpeed;
+        const newSpeed = speed + (baseMaxSpeed - speed) * slowdownRate;
+        p.vx *= newSpeed / speed;
+        p.vy *= newSpeed / speed;
       }
       p.x += p.vx;
       p.y += p.vy;
-
-      if (p.x < -p.size) p.x = width + p.size;
-      if (p.x > width + p.size) p.x = -p.size;
-      if (p.y < -p.size) p.y = height + p.size;
-      if (p.y > height + p.size) p.y = -p.size;
+      wrap(p);
     }
   }
 
@@ -132,9 +143,7 @@ export function createParticleAnimation(canvas, userOptions = {}) {
     if (!ctx) return;
     const glowBlur = options.glowBlur ?? 10;
     ctx.clearRect(0, 0, width, height);
-
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
+    for (const p of particles) {
       ctx.save();
       ctx.shadowColor = `rgba(255, 255, 255, ${p.color[3]})`;
       ctx.shadowBlur = glowBlur;
